@@ -1,0 +1,1760 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📖 책 캡처기 V10</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;700&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;700&family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Noto+Serif+KR:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-color: #f5f0e8;
+        --panel-bg: #faf8f4;
+        --input-bg: #f4efe6;
+        --border: #e0d7c8;
+        --text-main: #2f261e;
+        --text-sub: #8b7355;
+        --accent: #b5694a;
+        --shadow: rgba(61, 43, 31, 0.06);
+        --book-font-size: 15px;
+        --book-font-family:
+          -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      }
+
+      body {
+        font-family:
+          -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        background-color: var(--bg-color);
+        margin: 0;
+        display: flex;
+        height: 100vh;
+        color: var(--text-main);
+        overflow: hidden;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          flex-direction: column;
+          overflow: auto;
+          height: auto;
+        }
+        .editor-panel {
+          width: 100% !important;
+          height: auto;
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+        }
+        .preview-panel {
+          height: 100vh;
+        }
+      }
+
+      .editor-panel {
+        width: 420px;
+        background-color: var(--panel-bg);
+        padding: 25px;
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        flex-shrink: 0;
+        gap: 15px;
+        box-shadow: 4px 0 18px rgba(61, 43, 31, 0.07);
+        z-index: 10;
+      }
+
+      /* Expanded textarea mode */
+      .editor-expanded .editor-hideable {
+        display: none !important;
+      }
+      .editor-expanded textarea {
+        flex: 1;
+        height: auto !important;
+        min-height: 300px;
+      }
+      .editor-expanded .textarea-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Expand button */
+      .textarea-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .textarea-header label {
+        margin-bottom: 0;
+        white-space: nowrap;
+      }
+      .btn-expand {
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        color: var(--text-sub);
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .btn-expand:hover {
+        background: var(--border);
+      }
+      .textarea-section .syntax-hint {
+        margin-top: 0;
+        margin-bottom: 8px;
+      }
+
+      .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      .title-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .btn-bread {
+        background-color: #fff7ed;
+        border: 1px solid #ffedd5;
+        color: var(--text-main);
+        font-size: 1rem;
+        padding: 4px 7px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+      }
+      .btn-bread:hover {
+        background-color: #ffedd5;
+        transform: translateY(-2px);
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      /* 장문 모드 컬러칩 그룹 */
+
+      .btn-icon {
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        color: var(--text-sub);
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: 0.2s;
+      }
+      .btn-icon:hover {
+        background: var(--border);
+      }
+      .btn-icon.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+      .btn-angel svg:first-child {
+        display: none;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 1rem;
+        color: var(--text-main);
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      h2 .ver-badge {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-sub);
+        background: var(--border);
+        padding: 1px 5px;
+        border-radius: 4px;
+        letter-spacing: 0;
+        margin-top: 1px;
+      }
+      label {
+        font-size: 0.85rem;
+        color: var(--text-sub);
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      select,
+      input,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        background: var(--input-bg);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+      }
+      textarea {
+        resize: none;
+        line-height: 1.6;
+        font-family: -apple-system, "Apple SD Gothic Neo", sans-serif;
+        height: 300px;
+        color: var(--text-main);
+      }
+      textarea::placeholder {
+        color: #b5a78e;
+        font-style: italic;
+      }
+      textarea:focus,
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: var(--panel-bg);
+        box-shadow: 0 0 0 3px rgba(181, 105, 74, 0.15);
+      }
+
+      .keyword-group {
+        background: #f4efe6;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .keyword-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+        align-items: center;
+      }
+      .keyword-row input {
+        padding: 8px;
+        font-size: 0.9rem;
+        background: #faf8f4;
+      }
+
+      .btn-small {
+        padding: 8px 12px;
+        background: #b5a78e;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        transition: 0.2s;
+      }
+      .btn-small:hover {
+        background: #8b7355;
+      }
+
+      .btn-add {
+        background: #faf8f4;
+        border: 1px dashed #d4c8b4;
+        color: #8b7355;
+        width: 100%;
+        margin-top: 5px;
+        transition: 0.2s;
+      }
+      .btn-add:hover {
+        background: #f4efe6;
+        border-color: #b5a78e;
+      }
+      .btn-remove {
+        background: #c44a38;
+        color: white;
+      }
+
+      .helper-bar {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 5px;
+        flex-wrap: wrap;
+      }
+      .helper-bar button {
+        background: #f4efe6;
+        border: 1px solid #e0d7c8;
+        color: #6b5940;
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 700;
+        transition: 0.2s;
+      }
+      .helper-bar button:hover {
+        background: #e8e0d0;
+        transform: translateY(-1px);
+      }
+
+      /* Settings */
+      .settings-group {
+        background: #f4efe6;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .setting-row label {
+        margin-bottom: 0;
+        flex-shrink: 0;
+        min-width: 80px;
+      }
+      .setting-row input[type="range"] {
+        flex: 1;
+        padding: 0;
+        height: 6px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: var(--border);
+        border: none;
+        border-radius: 3px;
+        outline: none;
+      }
+      .setting-row input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+      }
+      .setting-value {
+        font-size: 0.8rem;
+        color: var(--text-sub);
+        min-width: 40px;
+        text-align: right;
+        font-weight: 600;
+      }
+      .setting-row select {
+        width: auto;
+        flex: 1;
+        padding: 8px;
+        font-size: 0.85rem;
+      }
+
+      /* Toggle switch */
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .toggle-row label {
+        margin-bottom: 0;
+      }
+      .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #d4c8b4;
+        border-radius: 24px;
+        transition: 0.3s;
+      }
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        border-radius: 50%;
+        transition: 0.3s;
+      }
+      .toggle-switch input:checked + .toggle-slider {
+        background-color: var(--accent);
+      }
+      .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: auto;
+        padding-top: 20px;
+      }
+      .btn-main {
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        flex: 1;
+        transition: 0.2s;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+      .btn-save {
+        background-color: var(--accent);
+      }
+      .btn-save:hover {
+        background-color: #9a5538;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(181, 105, 74, 0.25);
+      }
+
+      .preview-panel {
+        flex: 1;
+        background-color: #e8e0d0;
+        overflow-y: auto;
+        display: flex;
+        padding: 40px;
+        position: relative;
+      }
+
+      /* ── 장문 모드 (이북 리더기 / 세피아) ── */
+      .preview-panel.longform-mode {
+        background-color: #e8e0d0;
+      }
+      .preview-panel.longform-mode #capture-area {
+        max-width: 1040px;
+        height: var(--book-height, 680px);
+        min-height: 0;
+        background: #f4efe6;
+        padding: var(--book-padding-y, 32px) var(--book-padding-x, 32px);
+        box-shadow: 0 6px 32px rgba(61, 43, 31, 0.13);
+        border-radius: 3px;
+        position: relative;
+        overflow: hidden;
+      }
+      .preview-panel.longform-mode .chat-content {
+        gap: 0;
+        position: relative;
+        z-index: 1;
+        height: 100%;
+      }
+      .preview-panel.longform-mode #capture-area::before {
+        content: "";
+        position: absolute;
+        top: 22px;
+        bottom: 22px;
+        left: 50%;
+        width: 1px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          var(--longform-line, rgba(61, 43, 31, 0.16)) 8%,
+          var(--longform-line-strong, rgba(61, 43, 31, 0.3)) 50%,
+          var(--longform-line, rgba(61, 43, 31, 0.16)) 92%,
+          transparent
+        );
+        box-shadow:
+          -10px 0 20px rgba(61, 43, 31, 0.06),
+          10px 0 20px rgba(255, 255, 255, 0.55);
+        pointer-events: none;
+      }
+      .preview-panel.longform-mode #capture-area.single-page {
+        max-width: 680px;
+      }
+      .preview-panel.longform-mode #capture-area.single-page::before {
+        display: none;
+      }
+      .preview-panel.longform-mode .book-flow {
+        height: 100%;
+        column-count: 2;
+        column-gap: 92px;
+        column-fill: auto;
+        color: var(--longform-text, #3d2b1f);
+        font-family: var(--book-font-family);
+        font-size: var(--book-font-size, 15px);
+        line-height: 1.95;
+        word-break: normal;
+        overflow-wrap: anywhere;
+      }
+      .preview-panel.longform-mode .book-flow .dialogue {
+        font-weight: 800;
+      }
+      .preview-panel.longform-mode .book-flow .italic-text {
+        font-style: italic;
+      }
+      .preview-panel.longform-mode .book-block {
+        display: block;
+        margin: 0 0 1.35em;
+        padding: 0.12em 0 0.12em 0.9em;
+        white-space: pre-wrap;
+        break-inside: auto;
+        page-break-inside: auto;
+        -webkit-column-break-inside: auto;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        cursor: pointer;
+        border-left: 0;
+        position: relative;
+        color: inherit;
+        background-image: linear-gradient(
+          var(--book-speaker-line, transparent),
+          var(--book-speaker-line, transparent)
+        );
+        background-repeat: no-repeat;
+        background-size: 2px calc(100% - 0.64em);
+        background-position: left 0.32em;
+        transition: background-color 0.15s ease;
+      }
+      .preview-panel.longform-mode .book-block:hover {
+        background-color: var(--book-hover, rgba(61, 43, 31, 0.045));
+      }
+      .preview-panel.longform-mode .book-block.me {
+        --book-speaker-line: transparent;
+      }
+      .preview-panel.longform-mode .book-block.other {
+        --book-speaker-line: var(--book-other-line, rgba(181, 154, 114, 0.16));
+        padding-left: 2.15em;
+      }
+      .preview-panel.longform-mode #capture-area.speaker-indent-off .book-block,
+      .preview-panel.longform-mode
+        #capture-area.speaker-indent-off
+        .book-block.other {
+        background-image: none;
+        padding-left: 0.75em;
+      }
+      .preview-panel.longform-mode .book-divider {
+        break-after: avoid;
+        margin: 2em 0;
+        height: 1px;
+        background: var(--longform-line, rgba(61, 43, 31, 0.22));
+      }
+
+      @media (max-width: 900px) {
+        .preview-panel {
+          padding: 32px;
+        }
+        .preview-panel.longform-mode #capture-area {
+          height: var(--book-height, 620px);
+          max-width: 680px;
+          padding: 42px 34px;
+        }
+        .preview-panel.longform-mode #capture-area::before {
+          display: none;
+        }
+        .preview-panel.longform-mode .book-flow {
+          column-count: 1;
+          column-gap: 0;
+        }
+      }
+      .preview-panel.longform-mode #capture-area.single-page .book-flow {
+        column-count: 1;
+        column-gap: 0;
+      }
+      /* 장문 모드 버튼 활성 상태 */
+
+      #capture-area {
+        width: 100%;
+        max-width: 420px;
+        margin: auto;
+        min-height: 600px;
+        display: flex;
+        flex-direction: column;
+        padding: 30px 20px;
+        box-shadow: 0 20px 40px rgba(61, 43, 31, 0.1);
+        transition: background 0.3s;
+        background-color: #fff;
+      }
+      .chat-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .syntax-hint {
+        font-size: 0.75rem;
+        color: var(--text-sub);
+        margin-top: -8px;
+        line-height: 1.5;
+        padding: 8px 10px;
+        background: var(--input-bg);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+      }
+      .syntax-hint code {
+        background: var(--border);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 0.75rem;
+      }
+
+      .collapsible-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+        padding: 4px 0;
+      }
+      .collapsible-header:hover label {
+        color: var(--accent);
+      }
+      .collapsible-header .arrow {
+        font-size: 0.7rem;
+        color: var(--text-sub);
+        transition: transform 0.2s;
+      }
+      .collapsible-header .arrow.open {
+        transform: rotate(180deg);
+      }
+      .collapsible-body {
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+      .collapsible-body.collapsed {
+        max-height: 0 !important;
+      }
+    </style>
+  </head>
+  <body class="theme-reader">
+    <div class="editor-panel">
+      <div class="header-row">
+        <div class="title-group">
+          <button class="btn-bread" onclick="goHome()" title="홈으로 돌아가기">
+            🍞️
+          </button>
+          <h2>책 캡처기 <span class="ver-badge">V10</span></h2>
+        </div>
+        <div class="header-actions">
+          <a
+            href="https://toastout.github.io/log/"
+            target="_blank"
+            title="Book capture"
+            class="btn-icon btn-angel"
+            style="
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              text-decoration: none;
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 36 36"
+              fill="none"
+            >
+              <!-- 후광 -->
+              <ellipse
+                cx="18"
+                cy="5"
+                rx="9"
+                ry="3"
+                fill="none"
+                stroke="#f6c90e"
+                stroke-width="2.2"
+              />
+              <!-- 얼굴 -->
+              <circle
+                cx="18"
+                cy="16"
+                r="9"
+                fill="#fde68a"
+                stroke="#f6c90e"
+                stroke-width="1.5"
+              />
+              <!-- 눈 -->
+              <ellipse cx="14.5" cy="15" rx="1.2" ry="1.5" fill="#5c3a1e" />
+              <ellipse cx="21.5" cy="15" rx="1.2" ry="1.5" fill="#5c3a1e" />
+              <!-- 미소 -->
+              <path
+                d="M14.5 19.5 Q18 22.5 21.5 19.5"
+                stroke="#c97b3a"
+                stroke-width="1.4"
+                fill="none"
+                stroke-linecap="round"
+              />
+              <!-- 날개 (왼) -->
+              <path
+                d="M9 20 Q2 16 3 24 Q6 28 11 25"
+                fill="#e0f2fe"
+                stroke="#bae6fd"
+                stroke-width="1.2"
+              />
+              <!-- 날개 (오) -->
+              <path
+                d="M27 20 Q34 16 33 24 Q30 28 25 25"
+                fill="#e0f2fe"
+                stroke="#bae6fd"
+                stroke-width="1.2"
+              />
+              <!-- 몸 -->
+              <path
+                d="M11 26 Q18 32 25 26"
+                fill="#fde68a"
+                stroke="#f6c90e"
+                stroke-width="1.2"
+              />
+            </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 36 36"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                fill="#f4efe6"
+                stroke="#d4c8b4"
+                stroke-width="1.4"
+              />
+              <path
+                d="M10 12.5H26C28.2 12.5 30 14.2 30 16.4V22.1C30 24.3 28.2 26 26 26H18.1L12.6 30V26H10C7.8 26 6 24.3 6 22.1V16.4C6 14.2 7.8 12.5 10 12.5Z"
+                fill="#ffffff"
+                stroke="#8b7355"
+                stroke-width="1.7"
+                stroke-linejoin="round"
+              />
+              <circle cx="13.8" cy="19.2" r="1.45" fill="#8b7355" />
+              <circle cx="18" cy="19.2" r="1.45" fill="#8b7355" />
+              <circle cx="22.2" cy="19.2" r="1.45" fill="#8b7355" />
+            </svg>
+          </a>
+          <button onclick="resetData()" class="btn-small">전체 초기화</button>
+        </div>
+      </div>
+
+      <div class="editor-hideable">
+        <label>🎨 책 테마</label>
+        <select id="theme-select" onchange="changeTheme()">
+          <optgroup label="기본">
+            <option value="theme-reader">기본 리더</option>
+          </optgroup>
+          <optgroup label="출판물">
+            <option value="theme-literary">문예지</option>
+            <option value="theme-magazine">잡지</option>
+            <option value="theme-fashion">패션 매거진</option>
+            <option value="theme-paperback">문고본</option>
+            <option value="theme-classic">고전 양장본</option>
+          </optgroup>
+          <optgroup label="신문">
+            <option value="theme-daily">일간지</option>
+            <option value="theme-morning">조간신문</option>
+            <option value="theme-evening">석간신문</option>
+            <option value="theme-editorial">사설면</option>
+          </optgroup>
+          <optgroup label="노트">
+            <option value="theme-manuscript">원고지</option>
+            <option value="theme-research">연구노트</option>
+            <option value="theme-archive">아카이브</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="editor-hideable">
+        <label>치환 키워드</label>
+        <div class="helper-bar">
+          <button
+            onmousedown="event.preventDefault(); insertToFocused('{{user}}')"
+          >
+            + {{user}}
+          </button>
+          <button
+            onmousedown="event.preventDefault(); insertToFocused('{{char}}')"
+          >
+            + {{char}}
+          </button>
+          <button
+            onmousedown="
+              event.preventDefault();
+              insertToFocused('---');
+            "
+          >
+            + 구분선
+          </button>
+        </div>
+        <div class="keyword-group">
+          <div id="keyword-list"></div>
+          <button class="btn-small btn-add" onclick="addKeywordRow('', '')">
+            + 키워드 칸 추가
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsible Settings -->
+      <div class="editor-hideable">
+        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+          <label style="cursor: pointer; margin-bottom: 0">⚙️ 세부 설정</label>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="collapsible-body collapsed" style="max-height: 500px">
+          <div class="settings-group" style="margin-top: 8px">
+            <div class="setting-row">
+              <label>폰트</label>
+              <select id="font-select" onchange="updateFont(this.value)">
+                <option
+                  value="-apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif"
+                >
+                  시스템 기본 (Apple)
+                </option>
+                <optgroup label="고딕 (산세리프)">
+                  <option value="'Nanum Gothic', sans-serif">나눔고딕</option>
+                  <option value="'Gothic A1', sans-serif">Gothic A1</option>
+                  <option value="'IBM Plex Sans KR', sans-serif">
+                    IBM Plex Sans KR
+                  </option>
+                  <option value="'Gowun Dodum', sans-serif">고운돋움</option>
+                </optgroup>
+                <optgroup label="명조 (세리프)">
+                  <option value="'Nanum Myeongjo', serif">나눔명조</option>
+                  <option value="'Noto Serif KR', serif">Noto Serif KR</option>
+                  <option value="'Gowun Batang', serif">고운바탕</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <label>폰트 크기</label>
+              <input
+                type="range"
+                min="12"
+                max="22"
+                value="15"
+                id="font-size-range"
+                oninput="updateFontSize(this.value)"
+              />
+              <span class="setting-value" id="font-size-val">15px</span>
+            </div>
+            <div class="setting-row">
+              <label>캡처 패딩</label>
+              <input
+                type="range"
+                min="32"
+                max="92"
+                value="32"
+                id="capture-padding-range"
+                oninput="updateCapturePadding(this.value)"
+              />
+              <span class="setting-value" id="capture-padding-val">32px</span>
+            </div>
+
+            <hr
+              style="
+                border: none;
+                border-top: 1px solid var(--border);
+                margin: 4px 0;
+              "
+            />
+
+            <div class="toggle-row">
+              <label>화자 들여쓰기</label>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="speaker-indent-toggle"
+                  checked
+                  onchange="updateSpeakerIndent()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <label>"대사" 굵게</label>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="bold-toggle"
+                  checked
+                  onchange="render()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <label>*기울임*</label>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="italic-toggle"
+                  checked
+                  onchange="render()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="textarea-section">
+        <div class="textarea-header">
+          <label>책 본문</label>
+          <button class="btn-expand" id="expand-btn" onclick="toggleExpand()">
+            <span id="expand-icon">⤢</span> <span id="expand-text">최대화</span>
+          </button>
+        </div>
+        <div class="syntax-hint editor-hideable">
+          <code>"대사"</code> → <b>굵게</b> &nbsp;|&nbsp;
+          <code>*기울임*</code> → <i>이탤릭</i> &nbsp;|&nbsp; <code>---</code> →
+          장면 구분
+        </div>
+        <textarea
+          id="chat-input"
+          spellcheck="false"
+          oninput="render()"
+          onfocus="handleFocus(this)"
+          placeholder='(예시 내용은 입력을 시작하면 사라집니다)&#13;&#10;&#13;&#10;ㅏ&#13;&#10;안녕하세요&#13;&#10;ㅓ&#13;&#10;반갑습니다&#13;&#10;---&#13;&#10;ㅏ&#13;&#10;"대사는 굵게", *이건 기울임*'
+        ></textarea>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-main btn-save" onclick="saveImage()">
+          📸 이미지 저장
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div id="capture-area">
+        <div class="chat-content" id="chat-list"></div>
+      </div>
+    </div>
+
+    <script>
+      const EXAMPLE_TEXT = `ㅏ
+{{user}}는 박박 우겨서 신부 수트를 입고 아주 편안하게 앉아 있었다.
+ㅓ
+문을 열자마자 마주한 풍경은 '수줍은 신부'와는 거리가 멀어도 한참 멀었다. 풍성한 드레스 자락 대신 날 선 바지 주름이, 다소곳하게 모은 손 대신 세상 편안하게 늘어진 자세가 시야를 가득 채운다.
+
+"드레스 코드가 바뀐 줄은 몰랐군요. 하객들에게 신랑이 두 명이라고 소개할 셈입니까?"
+
+성큼 다가가 그녀의 맞은편 소파 팔걸이에 삐딱하게 걸터앉으며, 위아래로 훑어보는 시선에 노골적인 평가를 담았다.
+ㅏ
+"눈이 달려있으면 제가 남자로 보이지는 않겠죠." {{user}}는 {{char}}의 눈동자를 올곧게 바라보며 피식 웃었다.
+ㅓ
+"시력은 양쪽 다 1.5니 걱정 마십시오. 다만 하객들이 신랑과 신부를 구분하는 데 1초 정도 더 걸릴 수는 있겠군요."
+
+자리에서 일어나 재킷 단추를 잠그며 턱짓으로 문을 가리켰다.
+
+"그럼 이동하죠. 입장할 시간입니다, 파트너."
+ㅏ
+답하지 않고 하라는 대로 따랐다.
+ㅓ
+"신부님 드레스가…"
+
+당황한 기색이 역력한 예식 도우미의 시선을 가볍게 무시하고 굳게 닫힌 문 앞에 나란히 섰다. 문틈으로 새어 나오는 웅장한 현악 4중주 소리가 마치 처형식의 배경음악처럼 들린다. 흰색 수트 차림의 신부라니, 보수적인 집안 어르신들이 뒷목을 잡을 풍경이지만 이제 와서 돌이킬 수는 없는 노릇이다. 차라리 이 돌발 상황을 '원경 그룹의 파격적인 혁신'으로 포장하는 게 리스크 관리 차원에서 효율적이라는 계산이 빠르게 섰다.
+
+"팔짱 끼십시오. 넘어지지나 말고."
+
+건조한 명령과 함께 팔꿈치를 살짝 들어 곁을 내어주었다. 거부권은 없다. 사회자의 들뜬 목소리와 함께 육중한 문이 양옆으로 갈라지기 시작했다. 쏟아지는 조명과 하객들의 시선이 화살처럼 꽂히는 버진로드 위, 우리는 완벽하게 연출된 쇼윈도 부부로서 첫발을 내디뎠다.
+ㅏ
+넘어질 것도 없었다. 힘주며 팔짱을 껴고 나란히 걸으면서 눈과 입만 대충 웃었다.
+ㅓ
+팔에 전해지는 악력이 예상보다 단단해, 넘어질 걱정은 기우였음을 깨닫는다. 하객들을 향해 짓는 저 기계적인 미소는 줌 렌즈 앞에서도 흔들림이 없어 제법 프로답다. 보통의 신부들처럼 눈물을 훔치거나 드레스 자락에 걸려 비틀거리는 촌극이 없으니, 내 입장에선 더할 나위 없는 파트너다. 쏟아지는 플래시 세례가 마치 신제품 발표회장 조명처럼 익숙하게 느껴졌다.
+
+단상에 가까워질수록 박수 소리가 고막을 때리듯 커졌다. 하객들을 향해 여유롭게 손을 흔들어주며, 입술만 거의 움직이지 않은 채 나직하게 속삭였다.
+
+"너무 씩씩하게 걷는군요. 행진곡이 군가처럼 들릴 지경입니다."
+`;
+
+      const DEFAULT_KEYWORDS = [
+        { target: "유저", replace: "{{user}}" },
+        { target: "캐릭터", replace: "{{char}}" },
+      ];
+
+      let parsedBlocks = [];
+      let lastFocusedElem = null;
+      const DEFAULT_CAPTURE_PADDING = 32;
+      let bookResizeFrame = 0;
+
+      window.onload = function () {
+        loadData();
+        lastFocusedElem = document.getElementById("chat-input");
+      };
+
+      window.addEventListener("resize", () => {
+        cancelAnimationFrame(bookResizeFrame);
+        bookResizeFrame = requestAnimationFrame(fitBookHeight);
+      });
+
+      let longformMode = true;
+      let longformTheme = "theme-reader";
+
+      const LONGFORM_THEMES = {
+        "theme-reader": {
+          outer: "#e7decc",
+          page: "#f6f0e4",
+          shadow: "rgba(59,43,25,0.12)",
+          text: "#332a20",
+          line: "rgba(82,64,42,0.18)",
+          meLine: "#8b7355",
+          otherLine: "#b59a72",
+          hover: "rgba(82,64,42,0.055)",
+        },
+        "theme-literary": {
+          outer: "#ddd7cb",
+          page: "#f7f3ea",
+          shadow: "rgba(48,39,30,0.13)",
+          text: "#2d2923",
+          line: "rgba(45,41,35,0.16)",
+          meLine: "#6f6658",
+          otherLine: "#b9aa8f",
+          hover: "rgba(45,41,35,0.05)",
+        },
+        "theme-magazine": {
+          outer: "#dcdad5",
+          page: "#fbfaf6",
+          shadow: "rgba(40,38,35,0.12)",
+          text: "#242424",
+          line: "rgba(20,20,20,0.14)",
+          meLine: "#1f2937",
+          otherLine: "#c08497",
+          hover: "rgba(31,41,55,0.045)",
+        },
+        "theme-fashion": {
+          outer: "#ded9d7",
+          page: "#fffaf8",
+          shadow: "rgba(56,44,45,0.12)",
+          text: "#2d2526",
+          line: "rgba(58,46,48,0.14)",
+          meLine: "#2f2a2b",
+          otherLine: "#c8a2a0",
+          hover: "rgba(200,162,160,0.08)",
+        },
+        "theme-paperback": {
+          outer: "#d8d0bd",
+          page: "#f4ecd7",
+          shadow: "rgba(66,49,25,0.13)",
+          text: "#352b1f",
+          line: "rgba(85,65,35,0.17)",
+          meLine: "#8a7654",
+          otherLine: "#c1ad82",
+          hover: "rgba(138,118,84,0.06)",
+        },
+        "theme-classic": {
+          outer: "#d8cec0",
+          page: "#f5efe5",
+          shadow: "rgba(55,34,22,0.15)",
+          text: "#2f241d",
+          line: "rgba(78,50,35,0.16)",
+          meLine: "#7a4f3a",
+          otherLine: "#b89b72",
+          hover: "rgba(122,79,58,0.055)",
+        },
+        "theme-daily": {
+          outer: "#d7d9d8",
+          page: "#f5f5f1",
+          shadow: "rgba(30,34,34,0.12)",
+          text: "#232625",
+          line: "rgba(35,39,39,0.16)",
+          meLine: "#5f6b70",
+          otherLine: "#a8a49a",
+          hover: "rgba(35,39,39,0.045)",
+        },
+        "theme-morning": {
+          outer: "#d8dee0",
+          page: "#f4f6f4",
+          shadow: "rgba(38,55,62,0.12)",
+          text: "#243036",
+          line: "rgba(40,60,70,0.15)",
+          meLine: "#6f8790",
+          otherLine: "#b8b2a4",
+          hover: "rgba(111,135,144,0.055)",
+        },
+        "theme-evening": {
+          outer: "#d5d0ca",
+          page: "#f3eee7",
+          shadow: "rgba(55,43,36,0.13)",
+          text: "#2f2924",
+          line: "rgba(61,48,40,0.15)",
+          meLine: "#7a6350",
+          otherLine: "#ad9279",
+          hover: "rgba(122,99,80,0.055)",
+        },
+        "theme-editorial": {
+          outer: "#d8d8d5",
+          page: "#faf9f5",
+          shadow: "rgba(32,32,30,0.12)",
+          text: "#202020",
+          line: "rgba(20,20,20,0.18)",
+          meLine: "#333333",
+          otherLine: "#8b8b83",
+          hover: "rgba(20,20,20,0.045)",
+        },
+        "theme-manuscript": {
+          outer: "#ded7c9",
+          page: "#fbf6ea",
+          shadow: "rgba(86,58,36,0.11)",
+          text: "#3a2d22",
+          line: "rgba(138,92,54,0.17)",
+          meLine: "#c47a4a",
+          otherLine: "#d8b48a",
+          hover: "rgba(196,122,74,0.06)",
+        },
+        "theme-research": {
+          outer: "#d7dedc",
+          page: "#f6faf8",
+          shadow: "rgba(34,65,58,0.11)",
+          text: "#23332f",
+          line: "rgba(46,94,82,0.15)",
+          meLine: "#5f857b",
+          otherLine: "#b1c2ba",
+          hover: "rgba(95,133,123,0.055)",
+        },
+        "theme-archive": {
+          outer: "#d8d2c8",
+          page: "#f4efe6",
+          shadow: "rgba(61,47,32,0.13)",
+          text: "#352b22",
+          line: "rgba(88,68,45,0.16)",
+          meLine: "#8b7355",
+          otherLine: "#c2ad91",
+          hover: "rgba(139,115,85,0.055)",
+        },
+      };
+      function withAlpha(color, alpha) {
+        if (!color || !color.startsWith("#") || color.length !== 7)
+          return color;
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+
+      function applyLongformThemeCSS() {
+        const selectedTheme =
+          document.getElementById("theme-select")?.value || longformTheme;
+        const t =
+          LONGFORM_THEMES[selectedTheme] || LONGFORM_THEMES["theme-reader"];
+        const panel = document.querySelector(".preview-panel");
+        const capture = document.getElementById("capture-area");
+        if (!panel || !capture) return;
+        panel.style.backgroundColor = t.outer;
+        capture.style.background = t.page;
+        capture.style.boxShadow = `0 6px 32px ${t.shadow}`;
+        capture.style.setProperty("--longform-line", t.line);
+        capture.style.setProperty("--longform-line-strong", t.line);
+        capture.style.setProperty("--longform-text", t.text);
+        capture.style.setProperty("--book-me-line", withAlpha(t.meLine, 0.24));
+        capture.style.setProperty(
+          "--book-other-line",
+          withAlpha(t.otherLine, 0.18),
+        );
+        capture.style.setProperty("--book-hover", t.hover);
+      }
+
+      function setLongformMode() {
+        document
+          .querySelector(".preview-panel")
+          ?.classList.add("longform-mode");
+        applyLongformThemeCSS();
+      }
+
+      function goHome() {
+        window.location.href = "https://toastout.github.io/log/";
+      }
+
+      function handleFocus(elem) {
+        setLastFocused(elem);
+        if (elem.value.trim() === EXAMPLE_TEXT.trim()) {
+          elem.value = "";
+          render();
+        }
+      }
+
+      function setLastFocused(elem) {
+        lastFocusedElem = elem;
+      }
+
+      function insertToFocused(text) {
+        if (lastFocusedElem) {
+          const start = lastFocusedElem.selectionStart;
+          const end = lastFocusedElem.selectionEnd;
+          const val = lastFocusedElem.value;
+          lastFocusedElem.value =
+            val.substring(0, start) + text + val.substring(end);
+          lastFocusedElem.selectionStart = lastFocusedElem.selectionEnd =
+            start + text.length;
+          lastFocusedElem.focus();
+          render();
+        } else {
+          alert("입력할 곳을 먼저 클릭해주세요.");
+        }
+      }
+
+      function toggleExpand() {
+        const panel = document.querySelector(".editor-panel");
+        const btn = document.getElementById("expand-btn");
+        const icon = document.getElementById("expand-icon");
+        const text = document.getElementById("expand-text");
+        const isExpanded = panel.classList.toggle("editor-expanded");
+        icon.textContent = isExpanded ? "⤡" : "⤢";
+        text.textContent = isExpanded ? "최소화" : "최대화";
+      }
+
+      function toggleCollapsible(header) {
+        const body = header.nextElementSibling;
+        const arrow = header.querySelector(".arrow");
+        body.classList.toggle("collapsed");
+        arrow.classList.toggle("open");
+      }
+
+      function updateFont(val) {
+        document
+          .getElementById("capture-area")
+          .style.setProperty("--book-font-family", val);
+        fitBookHeight();
+        saveData();
+      }
+
+      function updateFontSize(val) {
+        document.getElementById("font-size-val").textContent = val + "px";
+        document
+          .getElementById("capture-area")
+          .style.setProperty("--book-font-size", val + "px");
+        fitBookHeight();
+        saveData();
+      }
+
+      function updateCapturePadding(val) {
+        document.getElementById("capture-padding-val").textContent = val + "px";
+        const capture = document.getElementById("capture-area");
+        capture.style.setProperty("--book-padding-y", val + "px");
+        capture.style.setProperty("--book-padding-x", val + "px");
+        fitBookHeight();
+        saveData();
+      }
+
+      function updateSpeakerIndent() {
+        const enabled = document.getElementById(
+          "speaker-indent-toggle",
+        ).checked;
+        document
+          .getElementById("capture-area")
+          .classList.toggle("speaker-indent-off", !enabled);
+        fitBookHeight();
+        saveData();
+      }
+
+      function saveData() {
+        const data = {
+          bookSettingsVersion: 3,
+          text: document.getElementById("chat-input").value,
+          theme: document.getElementById("theme-select").value,
+          keywords: getKeywordsFromUI(),
+          font: document.getElementById("font-select").value,
+          fontSize: document.getElementById("font-size-range").value,
+          capturePadding: document.getElementById("capture-padding-range")
+            .value,
+          boldEnabled: document.getElementById("bold-toggle").checked,
+          italicEnabled: document.getElementById("italic-toggle").checked,
+          speakerIndentEnabled: document.getElementById("speaker-indent-toggle")
+            .checked,
+          longformTheme: document.getElementById("theme-select").value,
+        };
+        localStorage.setItem("book_gen_v10", JSON.stringify(data));
+      }
+
+      function loadData() {
+        const saved = localStorage.getItem("book_gen_v10");
+        if (saved) {
+          const data = JSON.parse(saved);
+          document.getElementById("chat-input").value =
+            data.text || EXAMPLE_TEXT;
+          const savedTheme = data.theme || data.longformTheme || "theme-reader";
+          document.getElementById("theme-select").value = LONGFORM_THEMES[
+            savedTheme
+          ]
+            ? savedTheme
+            : "theme-reader";
+
+          const savedKeywords = data.keywords || DEFAULT_KEYWORDS;
+          document.getElementById("keyword-list").innerHTML = "";
+          savedKeywords.forEach((k) => addKeywordRow(k.target, k.replace));
+
+          if (data.font) {
+            document.getElementById("font-select").value = data.font;
+            updateFont(data.font);
+          }
+          if (data.fontSize) {
+            document.getElementById("font-size-range").value = data.fontSize;
+            updateFontSize(data.fontSize);
+          }
+          if (data.capturePadding) {
+            const rawPadding =
+              Number(data.capturePadding) || DEFAULT_CAPTURE_PADDING;
+            const isLegacyPadding =
+              data.bookSettingsVersion !== 3 && rawPadding === 68;
+            const normalizedPadding = isLegacyPadding
+              ? DEFAULT_CAPTURE_PADDING
+              : Math.max(32, rawPadding);
+            document.getElementById("capture-padding-range").value =
+              normalizedPadding;
+            updateCapturePadding(normalizedPadding);
+          }
+          if (data.boldEnabled !== undefined)
+            document.getElementById("bold-toggle").checked = data.boldEnabled;
+          if (data.italicEnabled !== undefined)
+            document.getElementById("italic-toggle").checked =
+              data.italicEnabled;
+          if (data.speakerIndentEnabled !== undefined)
+            document.getElementById("speaker-indent-toggle").checked =
+              data.speakerIndentEnabled;
+          updateSpeakerIndent();
+          longformTheme = document.getElementById("theme-select").value;
+          setLongformMode(true);
+        } else {
+          document.getElementById("chat-input").value = EXAMPLE_TEXT;
+          DEFAULT_KEYWORDS.forEach((k) => addKeywordRow(k.target, k.replace));
+          updateCapturePadding(DEFAULT_CAPTURE_PADDING);
+          updateSpeakerIndent();
+          setLongformMode(true);
+        }
+        changeTheme();
+        render();
+      }
+
+      function resetData() {
+        if (confirm("초기화 하시겠습니까?")) {
+          localStorage.removeItem("book_gen_v10");
+          location.reload();
+        }
+      }
+
+      function addKeywordRow(target, replace) {
+        const div = document.createElement("div");
+        div.className = "keyword-row";
+        div.innerHTML = `
+          <input type="text" placeholder="대상 (예: 유저)" value="${target}" oninput="render()" onfocus="setLastFocused(this)">
+          <span style="color:#adb5bd;">→</span>
+          <input type="text" placeholder="변경 (예: {{user}})" value="${replace}" oninput="render()" onfocus="setLastFocused(this)">
+          <button class="btn-small btn-remove" onclick="removeRow(this)">X</button>
+        `;
+        document.getElementById("keyword-list").appendChild(div);
+      }
+
+      function removeRow(btn) {
+        btn.parentElement.remove();
+        render();
+      }
+
+      function getKeywordsFromUI() {
+        const rows = document.querySelectorAll(".keyword-row");
+        const list = [];
+        rows.forEach((row) => {
+          const inputs = row.querySelectorAll("input");
+          const t = inputs[0].value.trim();
+          const r = inputs[1].value.trim();
+          if (t) list.push({ target: t, replace: r });
+        });
+        return list;
+      }
+
+      function changeTheme() {
+        const theme = document.getElementById("theme-select").value;
+        longformTheme = theme;
+        [...document.body.classList].forEach((c) => {
+          if (c.startsWith("theme-")) document.body.classList.remove(c);
+        });
+        document.body.classList.add(theme);
+        applyLongformThemeCSS();
+        saveData();
+        render();
+      }
+
+      function parseRawText(rawText) {
+        const lines = rawText.split("\n");
+        let blocks = [];
+        let currentSpeaker = "other";
+        let buffer = [];
+
+        lines.forEach((line) => {
+          const trimmed = line.trim();
+          if (trimmed === "ㅏ" || trimmed === "ㅓ") {
+            if (buffer.length > 0) {
+              blocks.push({
+                speaker: currentSpeaker,
+                content: buffer.join("\n"),
+              });
+              buffer = [];
+            }
+            currentSpeaker = trimmed === "ㅏ" ? "me" : "other";
+          } else if (trimmed === "---") {
+            if (buffer.length > 0) {
+              blocks.push({
+                speaker: currentSpeaker,
+                content: buffer.join("\n"),
+              });
+              buffer = [];
+            }
+            blocks.push({ speaker: "divider", content: "" });
+          } else {
+            if (buffer.length === 0 && trimmed === "") return;
+            buffer.push(line);
+          }
+        });
+        if (buffer.length > 0) {
+          blocks.push({ speaker: currentSpeaker, content: buffer.join("\n") });
+        }
+        return blocks;
+      }
+
+      function escapeHtml(text) {
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function formatBookText(text) {
+        const boldOn = document.getElementById("bold-toggle").checked;
+        const italicOn = document.getElementById("italic-toggle").checked;
+        let safeText = escapeHtml(text);
+        const spans = [];
+
+        function stash(html) {
+          const key = "\x00" + spans.length + "\x00";
+          spans.push(html);
+          return key;
+        }
+
+        if (boldOn) {
+          safeText = safeText
+            .replace(/"([^"]+?)"/g, (_, inner) =>
+              stash('<span class="dialogue">\u201c' + inner + "\u201d</span>"),
+            )
+            .replace(/\u201c([^\u201d]+?)\u201d/g, (_, inner) =>
+              stash('<span class="dialogue">\u201c' + inner + "\u201d</span>"),
+            )
+            .replace(/\u300c([^\u300d]+?)\u300d/g, (_, inner) =>
+              stash('<span class="dialogue">\u300c' + inner + "\u300d</span>"),
+            )
+            .replace(/\u300e([^\u300f]+?)\u300f/g, (_, inner) =>
+              stash('<span class="dialogue">\u300e' + inner + "\u300f</span>"),
+            );
+        }
+
+        if (italicOn) {
+          safeText = safeText.replace(
+            /(?<!\*)\*([^*]+?)\*(?!\*)/g,
+            (_, inner) =>
+              stash('<span class="italic-text">' + inner + "</span>"),
+          );
+        }
+
+        return safeText.replace(
+          /\x00(\d+)\x00/g,
+          (_, index) => spans[Number(index)] || "",
+        );
+      }
+
+      function getDisplayText(block, keywords) {
+        let displayText = block.content;
+        keywords.forEach((k) => {
+          if (k.target && k.replace)
+            displayText = displayText.replaceAll(k.target, k.replace);
+        });
+        return formatBookText(displayText);
+      }
+
+      function updateBookColumnMode() {
+        const capture = document.getElementById("capture-area");
+        const panel = document.querySelector(".preview-panel");
+        if (!capture || !panel) return false;
+
+        const singlePage =
+          panel.clientWidth < 920 ||
+          window.matchMedia("(max-width: 900px)").matches;
+        capture.classList.toggle("single-page", singlePage);
+        return singlePage;
+      }
+
+      function fitBookHeight() {
+        const capture = document.getElementById("capture-area");
+        const flow = document.querySelector(".book-flow");
+        if (!capture || !flow) return;
+
+        const singlePage = updateBookColumnMode();
+        const minHeight = singlePage ? 420 : 420;
+        const maxHeight = singlePage ? 4200 : 2400;
+
+        function overflowsColumns() {
+          return flow.scrollWidth > flow.clientWidth + 2;
+        }
+
+        let low = minHeight;
+        let high =
+          Number.parseFloat(capture.style.height) || (singlePage ? 620 : 680);
+        capture.style.height = high + "px";
+
+        while (overflowsColumns() && high < maxHeight) {
+          low = high;
+          high = Math.min(maxHeight, Math.ceil(high * 1.25));
+          capture.style.height = high + "px";
+        }
+
+        if (overflowsColumns()) return;
+
+        for (let i = 0; i < 12; i++) {
+          const mid = Math.floor((low + high) / 2);
+          capture.style.height = mid + "px";
+          if (overflowsColumns()) {
+            low = mid + 1;
+          } else {
+            high = mid;
+          }
+        }
+
+        capture.style.height = high + 10 + "px";
+      }
+
+      function renderBookBlocks(blocks, chatList, keywords) {
+        applyLongformThemeCSS();
+        const flow = document.createElement("div");
+        flow.className = "book-flow";
+
+        blocks.forEach((block, index) => {
+          if (block.speaker === "divider") {
+            const divider = document.createElement("div");
+            divider.className = "book-divider";
+            flow.appendChild(divider);
+            return;
+          }
+
+          const div = document.createElement("div");
+          div.className =
+            "book-block " + (block.speaker === "me" ? "me" : "other");
+          div.title = "클릭하면 화자가 바뀝니다.";
+          div.onclick = () => toggleSpeaker(index);
+          div.innerHTML = getDisplayText(block, keywords);
+          flow.appendChild(div);
+        });
+
+        chatList.appendChild(flow);
+        fitBookHeight();
+      }
+
+      function render() {
+        saveData();
+        const rawInput = document.getElementById("chat-input").value;
+        parsedBlocks = parseRawText(rawInput);
+
+        const chatList = document.getElementById("chat-list");
+        chatList.innerHTML = "";
+
+        const keywords = getKeywordsFromUI();
+        setLongformMode();
+        renderBookBlocks(parsedBlocks, chatList, keywords);
+      }
+
+      function toggleSpeaker(index) {
+        if (!parsedBlocks[index] || parsedBlocks[index].speaker === "divider")
+          return;
+
+        parsedBlocks[index].speaker =
+          parsedBlocks[index].speaker === "me" ? "other" : "me";
+
+        let newText = "";
+        parsedBlocks.forEach((block) => {
+          if (block.speaker === "divider") {
+            newText += "---\n";
+          } else {
+            newText +=
+              (block.speaker === "me" ? "\u314f\n" : "\u3153\n") +
+              block.content +
+              "\n";
+          }
+        });
+
+        document.getElementById("chat-input").value = newText.trim();
+        render();
+      }
+
+      function saveImage() {
+        const captureArea = document.getElementById("capture-area");
+        fitBookHeight();
+        window.scrollTo(0, 0);
+        const style = window.getComputedStyle(captureArea);
+
+        html2canvas(captureArea, {
+          scale: 2,
+          backgroundColor: style.backgroundColor,
+          useCORS: true,
+        }).then((canvas) => {
+          const imgData = canvas.toDataURL("image/png");
+          const isIOS =
+            /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+          if (isIOS) {
+            // iOS: 인페이지 모달로 표시 (팝업 차단 우회)
+            const modal = document.getElementById("save-modal");
+            const modalImg = document.getElementById("save-modal-img");
+            modalImg.src = imgData;
+            modal.style.display = "flex";
+          } else {
+            // 안드로이드/데스크톱: 직접 다운로드
+            const link = document.createElement("a");
+            link.download = "book_v10.png";
+            link.href = imgData;
+            link.click();
+          }
+        });
+      }
+
+      function closeSaveModal(e) {
+        if (!e || e.target === document.getElementById("save-modal")) {
+          const modal = document.getElementById("save-modal");
+          modal.style.display = "none";
+          document.getElementById("save-modal-img").src = "";
+        }
+      }
+    </script>
+
+    <!-- 이미지 저장 모달 -->
+    <div
+      id="save-modal"
+      onclick="closeSaveModal(event)"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.72);
+        z-index: 9999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      "
+    >
+      <div
+        onclick="event.stopPropagation()"
+        style="
+          background: #faf8f4;
+          border-radius: 16px;
+          padding: 20px;
+          max-width: 360px;
+          width: 100%;
+          box-shadow: 0 8px 32px rgba(61, 43, 31, 0.3);
+          text-align: center;
+          margin: auto;
+          position: relative;
+        "
+      >
+        <button
+          onclick="closeSaveModal()"
+          style="
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(61, 43, 31, 0.1);
+            color: #2f261e;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+          "
+        >
+          ✕
+        </button>
+        <p
+          style="
+            margin: 0 0 6px;
+            font-size: 0.85rem;
+            color: #8b7355;
+            font-weight: 600;
+          "
+        >
+          이미지를 길게 눌러 저장하세요
+        </p>
+        <p style="margin: 0 0 14px; font-size: 0.78rem; color: #b5a78e">
+          iOS: 사진 앱에 저장 &nbsp;·&nbsp; 안드로이드: 이미지 저장
+        </p>
+        <img
+          id="save-modal-img"
+          src=""
+          alt="Generated Log"
+          style="
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(61, 43, 31, 0.15);
+            display: block;
+            margin: 0 auto 16px;
+          "
+        />
+        <button
+          onclick="closeSaveModal()"
+          style="
+            width: 100%;
+            padding: 10px;
+            background: #5c4433;
+            color: #faf8f4;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+          "
+        >
+          닫기
+        </button>
+      </div>
+    </div>
+  </body>
+</html>
