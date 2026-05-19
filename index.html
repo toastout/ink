@@ -450,7 +450,7 @@
       .preview-panel {
         flex: 1;
         background-color: #e8e0d0;
-        overflow-y: auto;
+        overflow: auto;
         display: flex;
         padding: 40px;
         position: relative;
@@ -502,6 +502,14 @@
       }
       .preview-panel.longform-mode #capture-area.single-page::before {
         display: none;
+      }
+      .preview-panel.longform-mode #capture-area.two-page {
+        flex: 0 0 1040px;
+        width: 1040px;
+        max-width: 1040px;
+      }
+      .preview-panel.longform-mode #capture-area.two-page::before {
+        display: block;
       }
       .preview-panel.longform-mode .book-flow {
         height: 100%;
@@ -575,7 +583,7 @@
         .preview-panel.longform-mode #capture-area {
           height: var(--book-height, 620px);
           max-width: 680px;
-          padding: 42px 34px;
+          padding: var(--book-padding-y, 32px) var(--book-padding-x, 32px);
         }
         .preview-panel.longform-mode #capture-area::before {
           display: none;
@@ -588,6 +596,13 @@
       .preview-panel.longform-mode #capture-area.single-page .book-flow {
         column-count: 1;
         column-gap: 0;
+      }
+      .preview-panel.longform-mode #capture-area.two-page .book-flow {
+        column-count: 2;
+        column-gap: 92px;
+      }
+      .preview-panel.longform-mode #capture-area.two-page::before {
+        display: block;
       }
       /* 장문 모드 버튼 활성 상태 */
 
@@ -880,6 +895,14 @@
                 oninput="updateCapturePadding(this.value)"
               />
               <span class="setting-value" id="capture-padding-val">32px</span>
+            </div>
+            <div class="setting-row">
+              <label>책 열 수</label>
+              <select id="column-mode-select" onchange="updateColumnMode()">
+                <option value="auto">자동</option>
+                <option value="one">1열 고정</option>
+                <option value="two">2열 고정</option>
+              </select>
             </div>
 
             <hr
@@ -1269,6 +1292,11 @@
         saveData();
       }
 
+      function updateColumnMode() {
+        fitBookHeight();
+        saveData();
+      }
+
       function updateSpeakerIndent() {
         const enabled = document.getElementById(
           "speaker-indent-toggle",
@@ -1282,7 +1310,7 @@
 
       function saveData() {
         const data = {
-          bookSettingsVersion: 3,
+          bookSettingsVersion: 4,
           text: document.getElementById("chat-input").value,
           theme: document.getElementById("theme-select").value,
           keywords: getKeywordsFromUI(),
@@ -1290,6 +1318,7 @@
           fontSize: document.getElementById("font-size-range").value,
           capturePadding: document.getElementById("capture-padding-range")
             .value,
+          columnMode: document.getElementById("column-mode-select").value,
           boldEnabled: document.getElementById("bold-toggle").checked,
           italicEnabled: document.getElementById("italic-toggle").checked,
           speakerIndentEnabled: document.getElementById("speaker-indent-toggle")
@@ -1328,7 +1357,7 @@
             const rawPadding =
               Number(data.capturePadding) || DEFAULT_CAPTURE_PADDING;
             const isLegacyPadding =
-              data.bookSettingsVersion !== 3 && rawPadding === 68;
+              data.bookSettingsVersion < 3 && rawPadding === 68;
             const normalizedPadding = isLegacyPadding
               ? DEFAULT_CAPTURE_PADDING
               : Math.max(32, rawPadding);
@@ -1336,6 +1365,8 @@
               normalizedPadding;
             updateCapturePadding(normalizedPadding);
           }
+          document.getElementById("column-mode-select").value =
+            data.columnMode || "auto";
           if (data.boldEnabled !== undefined)
             document.getElementById("bold-toggle").checked = data.boldEnabled;
           if (data.italicEnabled !== undefined)
@@ -1506,10 +1537,17 @@
         const panel = document.querySelector(".preview-panel");
         if (!capture || !panel) return false;
 
+        const mode =
+          document.getElementById("column-mode-select")?.value || "auto";
         const singlePage =
-          panel.clientWidth < 920 ||
-          window.matchMedia("(max-width: 900px)").matches;
+          mode === "one" ||
+          (mode === "auto" &&
+            (panel.clientWidth < 920 ||
+              window.matchMedia("(max-width: 900px)").matches));
+        const twoPage = mode === "two";
+
         capture.classList.toggle("single-page", singlePage);
+        capture.classList.toggle("two-page", twoPage);
         return singlePage;
       }
 
