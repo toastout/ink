@@ -456,6 +456,45 @@
         position: relative;
       }
 
+      .column-mode-chips {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px;
+        border: 1px solid rgba(61, 43, 31, 0.1);
+        border-radius: 999px;
+        background: rgba(250, 248, 244, 0.84);
+        box-shadow: 0 2px 10px rgba(61, 43, 31, 0.1);
+        backdrop-filter: blur(6px);
+      }
+      .column-mode-chip {
+        width: 28px;
+        height: 28px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text-sub);
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition:
+          background-color 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .column-mode-chip:hover {
+        background: rgba(61, 43, 31, 0.06);
+      }
+      .column-mode-chip.active {
+        color: var(--text-main);
+        border-color: rgba(61, 43, 31, 0.18);
+        background: #fffaf2;
+      }
+
       /* ── 장문 모드 (이북 리더기 / 세피아) ── */
       .preview-panel.longform-mode {
         background-color: #e8e0d0;
@@ -548,7 +587,7 @@
           var(--book-speaker-line, transparent)
         );
         background-repeat: no-repeat;
-        background-size: 2px calc(100% - 0.64em);
+        background-size: 2px 1.9em;
         background-position: left 0.32em;
         transition: background-color 0.15s ease;
       }
@@ -597,9 +636,15 @@
         column-count: 1;
         column-gap: 0;
       }
+      .preview-panel.longform-mode #capture-area.single-page .book-block {
+        background-size: 2px calc(100% - 0.64em);
+      }
       .preview-panel.longform-mode #capture-area.two-page .book-flow {
         column-count: 2;
         column-gap: 92px;
+      }
+      .preview-panel.longform-mode #capture-area.two-page .book-block {
+        background-size: 2px 1.9em;
       }
       .preview-panel.longform-mode #capture-area.two-page::before {
         display: block;
@@ -896,14 +941,6 @@
               />
               <span class="setting-value" id="capture-padding-val">32px</span>
             </div>
-            <div class="setting-row">
-              <label>책 열 수</label>
-              <select id="column-mode-select" onchange="updateColumnMode()">
-                <option value="auto">자동</option>
-                <option value="one">1열 고정</option>
-                <option value="two">2열 고정</option>
-              </select>
-            </div>
 
             <hr
               style="
@@ -982,6 +1019,40 @@
     </div>
 
     <div class="preview-panel">
+      <select id="column-mode-select" onchange="updateColumnMode()" hidden>
+        <option value="auto">자동</option>
+        <option value="one">1열 고정</option>
+        <option value="two">2열 고정</option>
+      </select>
+      <div class="column-mode-chips" aria-label="책 열 수">
+        <button
+          type="button"
+          class="column-mode-chip"
+          data-column-mode="auto"
+          onclick="setColumnMode('auto')"
+          title="자동"
+        >
+          A
+        </button>
+        <button
+          type="button"
+          class="column-mode-chip"
+          data-column-mode="one"
+          onclick="setColumnMode('one')"
+          title="1열 고정"
+        >
+          1
+        </button>
+        <button
+          type="button"
+          class="column-mode-chip"
+          data-column-mode="two"
+          onclick="setColumnMode('two')"
+          title="2열 고정"
+        >
+          2
+        </button>
+      </div>
       <div id="capture-area">
         <div class="chat-content" id="chat-list"></div>
       </div>
@@ -1292,7 +1363,23 @@
         saveData();
       }
 
+      function syncColumnModeChips() {
+        const mode =
+          document.getElementById("column-mode-select")?.value || "auto";
+        document.querySelectorAll(".column-mode-chip").forEach((chip) => {
+          chip.classList.toggle("active", chip.dataset.columnMode === mode);
+        });
+      }
+
+      function setColumnMode(mode) {
+        const select = document.getElementById("column-mode-select");
+        if (!select) return;
+        select.value = mode;
+        updateColumnMode();
+      }
+
       function updateColumnMode() {
+        syncColumnModeChips();
         fitBookHeight();
         saveData();
       }
@@ -1539,6 +1626,7 @@
 
         const mode =
           document.getElementById("column-mode-select")?.value || "auto";
+        syncColumnModeChips();
         const singlePage =
           mode === "one" ||
           (mode === "auto" &&
