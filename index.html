@@ -831,27 +831,12 @@
       <div class="editor-hideable">
         <label>🎨 책 테마</label>
         <select id="theme-select" onchange="changeTheme()">
-          <optgroup label="기본">
-            <option value="theme-reader">기본 리더</option>
-          </optgroup>
-          <optgroup label="출판물">
-            <option value="theme-literary">문예지</option>
-            <option value="theme-magazine">잡지</option>
-            <option value="theme-fashion">패션 매거진</option>
-            <option value="theme-paperback">문고본</option>
-            <option value="theme-classic">고전 양장본</option>
-          </optgroup>
-          <optgroup label="신문">
-            <option value="theme-daily">일간지</option>
-            <option value="theme-morning">조간신문</option>
-            <option value="theme-evening">석간신문</option>
-            <option value="theme-editorial">사설면</option>
-          </optgroup>
-          <optgroup label="노트">
-            <option value="theme-manuscript">원고지</option>
-            <option value="theme-research">연구노트</option>
-            <option value="theme-archive">아카이브</option>
-          </optgroup>
+          <option value="theme-reader">세피아 리더</option>
+          <option value="theme-plain">순백 모던</option>
+          <option value="theme-green">그린 세이지</option>
+          <option value="theme-blue">블루 미스트</option>
+          <option value="theme-rose">로즈 페이퍼</option>
+          <option value="theme-amber">빛바랜 문고본</option>
         </select>
       </div>
 
@@ -1119,6 +1104,7 @@
       let longformTheme = "theme-reader";
 
       const LONGFORM_THEMES = {
+        // 세피아 리더: 따뜻한 크림 종이, 가장 책다운 기본값
         "theme-reader": {
           outer: "#e7decc",
           page: "#f6f0e4",
@@ -1129,126 +1115,77 @@
           otherLine: "#b59a72",
           hover: "rgba(82,64,42,0.055)",
         },
-        "theme-literary": {
-          outer: "#ddd7cb",
-          page: "#f7f3ea",
-          shadow: "rgba(48,39,30,0.13)",
-          text: "#2d2923",
-          line: "rgba(45,41,35,0.16)",
-          meLine: "#6f6658",
-          otherLine: "#b9aa8f",
-          hover: "rgba(45,41,35,0.05)",
+        // 순백 모던: 색조 없는 깔끔한 미백색, 잡지·사설 느낌
+        "theme-plain": {
+          outer: "#dcdcd8",
+          page: "#fbfbf7",
+          shadow: "rgba(35,35,33,0.12)",
+          text: "#26282a",
+          line: "rgba(30,32,34,0.16)",
+          meLine: "#4b5158",
+          otherLine: "#a3a39b",
+          hover: "rgba(30,32,34,0.045)",
         },
-        "theme-magazine": {
-          outer: "#dcdad5",
-          page: "#fbfaf6",
-          shadow: "rgba(40,38,35,0.12)",
-          text: "#242424",
-          line: "rgba(20,20,20,0.14)",
-          meLine: "#1f2937",
-          otherLine: "#c08497",
-          hover: "rgba(31,41,55,0.045)",
+        // 그린 세이지: 은은한 연녹색, 눈 피로를 덜어주는 독서등 톤
+        "theme-green": {
+          outer: "#d2dccf",
+          page: "#f0f6ec",
+          shadow: "rgba(38,62,44,0.11)",
+          text: "#27332a",
+          line: "rgba(52,92,62,0.16)",
+          meLine: "#5f8569",
+          otherLine: "#aec4ad",
+          hover: "rgba(95,133,105,0.055)",
         },
-        "theme-fashion": {
-          outer: "#ded9d7",
-          page: "#fffaf8",
-          shadow: "rgba(56,44,45,0.12)",
-          text: "#2d2526",
-          line: "rgba(58,46,48,0.14)",
-          meLine: "#2f2a2b",
-          otherLine: "#c8a2a0",
-          hover: "rgba(200,162,160,0.08)",
+        // 블루 미스트: 차분한 청회색, 서늘한 아침 신문 톤
+        "theme-blue": {
+          outer: "#d2dbe2",
+          page: "#f0f5f9",
+          shadow: "rgba(36,55,70,0.11)",
+          text: "#25313b",
+          line: "rgba(45,75,100,0.16)",
+          meLine: "#62809a",
+          otherLine: "#a9bccb",
+          hover: "rgba(98,128,154,0.055)",
         },
-        "theme-paperback": {
-          outer: "#d8d0bd",
-          page: "#f4ecd7",
-          shadow: "rgba(66,49,25,0.13)",
-          text: "#352b1f",
-          line: "rgba(85,65,35,0.17)",
-          meLine: "#8a7654",
-          otherLine: "#c1ad82",
-          hover: "rgba(138,118,84,0.06)",
+        // 로즈 페이퍼: 부드러운 장밋빛 미색, 따뜻하고 화사한 톤
+        "theme-rose": {
+          outer: "#e3d4d2",
+          page: "#faf2ef",
+          shadow: "rgba(70,44,44,0.11)",
+          text: "#382c2b",
+          line: "rgba(120,68,68,0.15)",
+          meLine: "#a06a68",
+          otherLine: "#cfaaa6",
+          hover: "rgba(160,106,104,0.055)",
         },
-        "theme-classic": {
-          outer: "#d8cec0",
-          page: "#f5efe5",
-          shadow: "rgba(55,34,22,0.15)",
-          text: "#2f241d",
-          line: "rgba(78,50,35,0.16)",
-          meLine: "#7a4f3a",
-          otherLine: "#b89b72",
-          hover: "rgba(122,79,58,0.055)",
+        // 빛바랜 문고본: 햇볕에 바랜 누런 종이, 가장 진한 황지 톤
+        "theme-amber": {
+          outer: "#dcd0b2",
+          page: "#f6ecd0",
+          shadow: "rgba(80,58,22,0.13)",
+          text: "#3a2f1b",
+          line: "rgba(110,82,36,0.18)",
+          meLine: "#9a7c42",
+          otherLine: "#c8ae74",
+          hover: "rgba(154,124,66,0.06)",
         },
-        "theme-daily": {
-          outer: "#d7d9d8",
-          page: "#f5f5f1",
-          shadow: "rgba(30,34,34,0.12)",
-          text: "#232625",
-          line: "rgba(35,39,39,0.16)",
-          meLine: "#5f6b70",
-          otherLine: "#a8a49a",
-          hover: "rgba(35,39,39,0.045)",
-        },
-        "theme-morning": {
-          outer: "#d8dee0",
-          page: "#f4f6f4",
-          shadow: "rgba(38,55,62,0.12)",
-          text: "#243036",
-          line: "rgba(40,60,70,0.15)",
-          meLine: "#6f8790",
-          otherLine: "#b8b2a4",
-          hover: "rgba(111,135,144,0.055)",
-        },
-        "theme-evening": {
-          outer: "#d5d0ca",
-          page: "#f3eee7",
-          shadow: "rgba(55,43,36,0.13)",
-          text: "#2f2924",
-          line: "rgba(61,48,40,0.15)",
-          meLine: "#7a6350",
-          otherLine: "#ad9279",
-          hover: "rgba(122,99,80,0.055)",
-        },
-        "theme-editorial": {
-          outer: "#d8d8d5",
-          page: "#faf9f5",
-          shadow: "rgba(32,32,30,0.12)",
-          text: "#202020",
-          line: "rgba(20,20,20,0.18)",
-          meLine: "#333333",
-          otherLine: "#8b8b83",
-          hover: "rgba(20,20,20,0.045)",
-        },
-        "theme-manuscript": {
-          outer: "#ded7c9",
-          page: "#fbf6ea",
-          shadow: "rgba(86,58,36,0.11)",
-          text: "#3a2d22",
-          line: "rgba(138,92,54,0.17)",
-          meLine: "#c47a4a",
-          otherLine: "#d8b48a",
-          hover: "rgba(196,122,74,0.06)",
-        },
-        "theme-research": {
-          outer: "#d7dedc",
-          page: "#f6faf8",
-          shadow: "rgba(34,65,58,0.11)",
-          text: "#23332f",
-          line: "rgba(46,94,82,0.15)",
-          meLine: "#5f857b",
-          otherLine: "#b1c2ba",
-          hover: "rgba(95,133,123,0.055)",
-        },
-        "theme-archive": {
-          outer: "#d8d2c8",
-          page: "#f4efe6",
-          shadow: "rgba(61,47,32,0.13)",
-          text: "#352b22",
-          line: "rgba(88,68,45,0.16)",
-          meLine: "#8b7355",
-          otherLine: "#c2ad91",
-          hover: "rgba(139,115,85,0.055)",
-        },
+      };
+
+      // 구버전(13종) 테마를 가장 비슷한 새 테마로 변환
+      const LEGACY_THEME_MAP = {
+        "theme-literary": "theme-reader",
+        "theme-magazine": "theme-plain",
+        "theme-fashion": "theme-rose",
+        "theme-paperback": "theme-amber",
+        "theme-classic": "theme-reader",
+        "theme-daily": "theme-plain",
+        "theme-morning": "theme-blue",
+        "theme-evening": "theme-reader",
+        "theme-editorial": "theme-plain",
+        "theme-manuscript": "theme-amber",
+        "theme-research": "theme-green",
+        "theme-archive": "theme-reader",
       };
       function withAlpha(color, alpha) {
         if (!color || !color.startsWith("#") || color.length !== 7)
@@ -1421,7 +1358,8 @@
           const data = JSON.parse(saved);
           document.getElementById("chat-input").value =
             data.text || EXAMPLE_TEXT;
-          const savedTheme = data.theme || data.longformTheme || "theme-reader";
+          let savedTheme = data.theme || data.longformTheme || "theme-reader";
+          savedTheme = LEGACY_THEME_MAP[savedTheme] || savedTheme;
           document.getElementById("theme-select").value = LONGFORM_THEMES[
             savedTheme
           ]
