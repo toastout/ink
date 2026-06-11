@@ -649,76 +649,6 @@
       .preview-panel.longform-mode #capture-area.two-page::before {
         display: block;
       }
-
-      /* ── 테마 장식: 노트 줄 / 형광펜 / 밑줄 ── */
-      .preview-panel.longform-mode #capture-area.bold-off .book-flow .dialogue {
-        font-weight: inherit;
-      }
-      .preview-panel.longform-mode #capture-area.deco-ruled .book-block {
-        background-image:
-          linear-gradient(
-            var(--book-speaker-line, transparent),
-            var(--book-speaker-line, transparent)
-          ),
-          linear-gradient(
-            to bottom,
-            transparent calc(1.95em - 1px),
-            var(--deco-rule, transparent) calc(1.95em - 1px)
-          );
-        background-size:
-          2px 1.9em,
-          100% 1.95em;
-        background-position:
-          left 0.32em,
-          left 0.12em;
-        background-repeat: no-repeat, repeat;
-      }
-      .preview-panel.longform-mode
-        #capture-area.deco-ruled.single-page
-        .book-block {
-        background-size:
-          2px calc(100% - 0.64em),
-          100% 1.95em;
-      }
-      .preview-panel.longform-mode
-        #capture-area.deco-ruled.two-page
-        .book-block {
-        background-size:
-          2px 1.9em,
-          100% 1.95em;
-      }
-      .preview-panel.longform-mode
-        #capture-area.deco-ruled.speaker-indent-off
-        .book-block {
-        background-image: linear-gradient(
-          to bottom,
-          transparent calc(1.95em - 1px),
-          var(--deco-rule, transparent) calc(1.95em - 1px)
-        );
-        background-size: 100% 1.95em;
-        background-position: left 0.12em;
-        background-repeat: repeat;
-      }
-      .preview-panel.longform-mode #capture-area.deco-highlight .dialogue {
-        background: var(--deco-mark, transparent);
-        box-decoration-break: clone;
-        -webkit-box-decoration-break: clone;
-        padding: 0.04em 0.18em;
-        margin: 0 -0.05em;
-        border-radius: 4px;
-      }
-      .preview-panel.longform-mode #capture-area.deco-underline .dialogue {
-        background-image: linear-gradient(
-          var(--deco-mark, transparent),
-          var(--deco-mark, transparent)
-        );
-        background-repeat: no-repeat;
-        background-size: 100% 2px;
-        background-position: 0 100%;
-        box-decoration-break: clone;
-        -webkit-box-decoration-break: clone;
-        padding-bottom: 0.12em;
-      }
       /* 장문 모드 버튼 활성 상태 */
 
       #capture-area {
@@ -785,7 +715,7 @@
       }
     </style>
   </head>
-  <body class="theme-plain">
+  <body class="theme-reader">
     <div class="editor-panel">
       <div class="header-row">
         <div class="title-group">
@@ -901,11 +831,27 @@
       <div class="editor-hideable">
         <label>🎨 책 테마</label>
         <select id="theme-select" onchange="changeTheme()">
-          <option value="theme-plain">순백 모던</option>
-          <option value="theme-note">줄글 노트</option>
-          <option value="theme-highlight">형광펜 강조</option>
-          <option value="theme-underline">밑줄 강조</option>
-          <option value="theme-reader">세피아 리더</option>
+          <optgroup label="기본">
+            <option value="theme-reader">기본 리더</option>
+          </optgroup>
+          <optgroup label="출판물">
+            <option value="theme-literary">문예지</option>
+            <option value="theme-magazine">잡지</option>
+            <option value="theme-fashion">패션 매거진</option>
+            <option value="theme-paperback">문고본</option>
+            <option value="theme-classic">고전 양장본</option>
+          </optgroup>
+          <optgroup label="신문">
+            <option value="theme-daily">일간지</option>
+            <option value="theme-morning">조간신문</option>
+            <option value="theme-evening">석간신문</option>
+            <option value="theme-editorial">사설면</option>
+          </optgroup>
+          <optgroup label="노트">
+            <option value="theme-manuscript">원고지</option>
+            <option value="theme-research">연구노트</option>
+            <option value="theme-archive">아카이브</option>
+          </optgroup>
         </select>
       </div>
 
@@ -1170,62 +1116,9 @@
       });
 
       let longformMode = true;
-      let longformTheme = "theme-plain";
+      let longformTheme = "theme-reader";
 
-      // 페이지 색은 전부 밝은 순백~미색으로 통일하고,
-      // 테마는 장식(deco: 노트 줄 / 형광펜 / 밑줄)으로 구분한다.
       const LONGFORM_THEMES = {
-        // 순백 모던: 깨끗한 미백색, 장식 없는 기본 리더
-        "theme-plain": {
-          outer: "#dcdcd8",
-          page: "#fcfcf9",
-          shadow: "rgba(35,35,33,0.12)",
-          text: "#26282a",
-          line: "rgba(30,32,34,0.16)",
-          meLine: "#4b5158",
-          otherLine: "#a3a39b",
-          hover: "rgba(30,32,34,0.045)",
-        },
-        // 줄글 노트: 흰 종이에 옅은 파란 노트 줄이 글줄마다 깔림
-        "theme-note": {
-          outer: "#d8dadc",
-          page: "#fdfcf8",
-          shadow: "rgba(40,46,58,0.11)",
-          text: "#2a2c30",
-          line: "rgba(70,90,120,0.16)",
-          meLine: "#5b6f8a",
-          otherLine: "#aeb8c4",
-          hover: "rgba(91,111,138,0.05)",
-          deco: "ruled",
-          rule: "rgba(96,135,180,0.22)",
-        },
-        // 형광펜 강조: 흰 종이, 대사에 노란 형광펜 효과
-        "theme-highlight": {
-          outer: "#dedcd2",
-          page: "#fdfdf8",
-          shadow: "rgba(60,55,30,0.11)",
-          text: "#2a2920",
-          line: "rgba(120,105,40,0.15)",
-          meLine: "#8a7c3f",
-          otherLine: "#c4b98a",
-          hover: "rgba(138,124,63,0.05)",
-          deco: "highlight",
-          mark: "rgba(255,222,89,0.45)",
-        },
-        // 밑줄 강조: 흰 종이, 대사 밑에 붉은 밑줄
-        "theme-underline": {
-          outer: "#dcd8d6",
-          page: "#fdfcfa",
-          shadow: "rgba(60,40,36,0.11)",
-          text: "#2b2625",
-          line: "rgba(140,70,60,0.15)",
-          meLine: "#9a5f52",
-          otherLine: "#c9a89f",
-          hover: "rgba(154,95,82,0.05)",
-          deco: "underline",
-          mark: "rgba(196,86,68,0.55)",
-        },
-        // 세피아 리더: 따뜻한 크림 종이, 고전적인 이북 리더 톤
         "theme-reader": {
           outer: "#e7decc",
           page: "#f6f0e4",
@@ -1236,26 +1129,126 @@
           otherLine: "#b59a72",
           hover: "rgba(82,64,42,0.055)",
         },
-      };
-
-      // 구버전 테마를 가장 비슷한 새 테마로 변환
-      const LEGACY_THEME_MAP = {
-        "theme-literary": "theme-plain",
-        "theme-magazine": "theme-plain",
-        "theme-fashion": "theme-highlight",
-        "theme-paperback": "theme-reader",
-        "theme-classic": "theme-reader",
-        "theme-daily": "theme-plain",
-        "theme-morning": "theme-plain",
-        "theme-evening": "theme-reader",
-        "theme-editorial": "theme-underline",
-        "theme-manuscript": "theme-note",
-        "theme-research": "theme-note",
-        "theme-archive": "theme-reader",
-        "theme-green": "theme-plain",
-        "theme-blue": "theme-plain",
-        "theme-rose": "theme-plain",
-        "theme-amber": "theme-reader",
+        "theme-literary": {
+          outer: "#ddd7cb",
+          page: "#f7f3ea",
+          shadow: "rgba(48,39,30,0.13)",
+          text: "#2d2923",
+          line: "rgba(45,41,35,0.16)",
+          meLine: "#6f6658",
+          otherLine: "#b9aa8f",
+          hover: "rgba(45,41,35,0.05)",
+        },
+        "theme-magazine": {
+          outer: "#dcdad5",
+          page: "#fbfaf6",
+          shadow: "rgba(40,38,35,0.12)",
+          text: "#242424",
+          line: "rgba(20,20,20,0.14)",
+          meLine: "#1f2937",
+          otherLine: "#c08497",
+          hover: "rgba(31,41,55,0.045)",
+        },
+        "theme-fashion": {
+          outer: "#ded9d7",
+          page: "#fffaf8",
+          shadow: "rgba(56,44,45,0.12)",
+          text: "#2d2526",
+          line: "rgba(58,46,48,0.14)",
+          meLine: "#2f2a2b",
+          otherLine: "#c8a2a0",
+          hover: "rgba(200,162,160,0.08)",
+        },
+        "theme-paperback": {
+          outer: "#d8d0bd",
+          page: "#f4ecd7",
+          shadow: "rgba(66,49,25,0.13)",
+          text: "#352b1f",
+          line: "rgba(85,65,35,0.17)",
+          meLine: "#8a7654",
+          otherLine: "#c1ad82",
+          hover: "rgba(138,118,84,0.06)",
+        },
+        "theme-classic": {
+          outer: "#d8cec0",
+          page: "#f5efe5",
+          shadow: "rgba(55,34,22,0.15)",
+          text: "#2f241d",
+          line: "rgba(78,50,35,0.16)",
+          meLine: "#7a4f3a",
+          otherLine: "#b89b72",
+          hover: "rgba(122,79,58,0.055)",
+        },
+        "theme-daily": {
+          outer: "#d7d9d8",
+          page: "#f5f5f1",
+          shadow: "rgba(30,34,34,0.12)",
+          text: "#232625",
+          line: "rgba(35,39,39,0.16)",
+          meLine: "#5f6b70",
+          otherLine: "#a8a49a",
+          hover: "rgba(35,39,39,0.045)",
+        },
+        "theme-morning": {
+          outer: "#d8dee0",
+          page: "#f4f6f4",
+          shadow: "rgba(38,55,62,0.12)",
+          text: "#243036",
+          line: "rgba(40,60,70,0.15)",
+          meLine: "#6f8790",
+          otherLine: "#b8b2a4",
+          hover: "rgba(111,135,144,0.055)",
+        },
+        "theme-evening": {
+          outer: "#d5d0ca",
+          page: "#f3eee7",
+          shadow: "rgba(55,43,36,0.13)",
+          text: "#2f2924",
+          line: "rgba(61,48,40,0.15)",
+          meLine: "#7a6350",
+          otherLine: "#ad9279",
+          hover: "rgba(122,99,80,0.055)",
+        },
+        "theme-editorial": {
+          outer: "#d8d8d5",
+          page: "#faf9f5",
+          shadow: "rgba(32,32,30,0.12)",
+          text: "#202020",
+          line: "rgba(20,20,20,0.18)",
+          meLine: "#333333",
+          otherLine: "#8b8b83",
+          hover: "rgba(20,20,20,0.045)",
+        },
+        "theme-manuscript": {
+          outer: "#ded7c9",
+          page: "#fbf6ea",
+          shadow: "rgba(86,58,36,0.11)",
+          text: "#3a2d22",
+          line: "rgba(138,92,54,0.17)",
+          meLine: "#c47a4a",
+          otherLine: "#d8b48a",
+          hover: "rgba(196,122,74,0.06)",
+        },
+        "theme-research": {
+          outer: "#d7dedc",
+          page: "#f6faf8",
+          shadow: "rgba(34,65,58,0.11)",
+          text: "#23332f",
+          line: "rgba(46,94,82,0.15)",
+          meLine: "#5f857b",
+          otherLine: "#b1c2ba",
+          hover: "rgba(95,133,123,0.055)",
+        },
+        "theme-archive": {
+          outer: "#d8d2c8",
+          page: "#f4efe6",
+          shadow: "rgba(61,47,32,0.13)",
+          text: "#352b22",
+          line: "rgba(88,68,45,0.16)",
+          meLine: "#8b7355",
+          otherLine: "#c2ad91",
+          hover: "rgba(139,115,85,0.055)",
+        },
       };
       function withAlpha(color, alpha) {
         if (!color || !color.startsWith("#") || color.length !== 7)
@@ -1270,18 +1263,10 @@
         const selectedTheme =
           document.getElementById("theme-select")?.value || longformTheme;
         const t =
-          LONGFORM_THEMES[selectedTheme] || LONGFORM_THEMES["theme-plain"];
+          LONGFORM_THEMES[selectedTheme] || LONGFORM_THEMES["theme-reader"];
         const panel = document.querySelector(".preview-panel");
         const capture = document.getElementById("capture-area");
         if (!panel || !capture) return;
-        capture.classList.remove(
-          "deco-ruled",
-          "deco-highlight",
-          "deco-underline",
-        );
-        if (t.deco) capture.classList.add("deco-" + t.deco);
-        capture.style.setProperty("--deco-rule", t.rule || "transparent");
-        capture.style.setProperty("--deco-mark", t.mark || "transparent");
         panel.style.backgroundColor = t.outer;
         capture.style.background = t.page;
         capture.style.boxShadow = `0 6px 32px ${t.shadow}`;
@@ -1436,13 +1421,12 @@
           const data = JSON.parse(saved);
           document.getElementById("chat-input").value =
             data.text || EXAMPLE_TEXT;
-          let savedTheme = data.theme || data.longformTheme || "theme-plain";
-          savedTheme = LEGACY_THEME_MAP[savedTheme] || savedTheme;
+          const savedTheme = data.theme || data.longformTheme || "theme-reader";
           document.getElementById("theme-select").value = LONGFORM_THEMES[
             savedTheme
           ]
             ? savedTheme
-            : "theme-plain";
+            : "theme-reader";
 
           const savedKeywords = data.keywords || DEFAULT_KEYWORDS;
           document.getElementById("keyword-list").innerHTML = "";
@@ -1585,6 +1569,7 @@
       }
 
       function formatBookText(text) {
+        const boldOn = document.getElementById("bold-toggle").checked;
         const italicOn = document.getElementById("italic-toggle").checked;
         let safeText = escapeHtml(text);
         const spans = [];
@@ -1595,21 +1580,21 @@
           return key;
         }
 
-        // 대사는 항상 스팬으로 감싸고, 굵기는 capture의 bold-off 클래스로 제어
-        // (형광펜·밑줄 등 테마 강조 효과가 굵게 토글과 무관하게 동작하도록)
-        safeText = safeText
-          .replace(/"([^"]+?)"/g, (_, inner) =>
-            stash('<span class="dialogue">\u201c' + inner + "\u201d</span>"),
-          )
-          .replace(/\u201c([^\u201d]+?)\u201d/g, (_, inner) =>
-            stash('<span class="dialogue">\u201c' + inner + "\u201d</span>"),
-          )
-          .replace(/\u300c([^\u300d]+?)\u300d/g, (_, inner) =>
-            stash('<span class="dialogue">\u300c' + inner + "\u300d</span>"),
-          )
-          .replace(/\u300e([^\u300f]+?)\u300f/g, (_, inner) =>
-            stash('<span class="dialogue">\u300e' + inner + "\u300f</span>"),
-          );
+        if (boldOn) {
+          safeText = safeText
+            .replace(/"([^"]+?)"/g, (_, inner) =>
+              stash('<span class="dialogue">\u201c' + inner + "\u201d</span>"),
+            )
+            .replace(/\u201c([^\u201d]+?)\u201d/g, (_, inner) =>
+              stash('<span class="dialogue">\u201c' + inner + "\u201d</span>"),
+            )
+            .replace(/\u300c([^\u300d]+?)\u300d/g, (_, inner) =>
+              stash('<span class="dialogue">\u300c' + inner + "\u300d</span>"),
+            )
+            .replace(/\u300e([^\u300f]+?)\u300f/g, (_, inner) =>
+              stash('<span class="dialogue">\u300e' + inner + "\u300f</span>"),
+            );
+        }
 
         if (italicOn) {
           safeText = safeText.replace(
@@ -1721,12 +1706,6 @@
 
       function render() {
         saveData();
-        document
-          .getElementById("capture-area")
-          .classList.toggle(
-            "bold-off",
-            !document.getElementById("bold-toggle").checked,
-          );
         const rawInput = document.getElementById("chat-input").value;
         parsedBlocks = parseRawText(rawInput);
 
